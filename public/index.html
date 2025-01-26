@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP Cache Demo</title>
+    <style>
+        body {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .card {
+            border: 1px solid #ddd;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 4px;
+            background-color: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button {
+            padding: 8px 16px;
+            margin: 5px;
+            cursor: pointer;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+            margin-top: 10px;
+        }
+        .description {
+            color: #666;
+            margin: 10px 0;
+            font-size: 0.9em;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #34495e;
+            margin-bottom: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h1>HTTP Cache Demo</h1>
+
+    <div class="card">
+        <h2>更新内容</h2>
+        <div class="description">
+            点击此按钮更新服务器内容，然后测试协商缓存的效果
+        </div>
+        <button onclick="updateContent()">更新服务器内容</button>
+        <pre id="update-result"></pre>
+    </div>
+
+    <div class="card">
+        <h2>1. Cache-Control (强缓存)</h2>
+        <div class="description">
+            使用 max-age=10 设置10秒的强缓存，10秒内的请求将直接从浏览器缓存获取
+        </div>
+        <button onclick="fetchData('/cache-control')">测试 Cache-Control</button>
+        <pre id="cache-control-result"></pre>
+    </div>
+
+    <div class="card">
+        <h2>2. Expires (强缓存)</h2>
+        <div class="description">
+            设置具体的过期时间，10秒内的请求将直接从浏览器缓存获取
+        </div>
+        <button onclick="fetchData('/expires')">测试 Expires</button>
+        <pre id="expires-result"></pre>
+    </div>
+
+    <div class="card">
+        <h2>3. Last-Modified (协商缓存)</h2>
+        <div class="description">
+            基于资源最后修改时间的协商缓存，内容未修改时返回304状态码
+        </div>
+        <button onclick="fetchData('/last-modified')">测试 Last-Modified</button>
+        <pre id="last-modified-result"></pre>
+    </div>
+
+    <div class="card">
+        <h2>4. ETag (协商缓存)</h2>
+        <div class="description">
+            基于资源内容的协商缓存，内容未修改时返回304状态码
+        </div>
+        <button onclick="fetchData('/etag')">测试 ETag</button>
+        <pre id="etag-result"></pre>
+    </div>
+
+    <div class="card">
+        <h2>5. No Cache</h2>
+        <div class="description">
+            设置 no-store 禁用所有缓存，每次都从服务器获取新内容
+        </div>
+        <button onclick="fetchData('/no-cache')">测试 No Cache</button>
+        <pre id="no-cache-result"></pre>
+    </div>
+
+    <div class="card">
+        <h2>6. Combined Strategy</h2>
+        <div class="description">
+            组合使用多种缓存策略，同时使用强缓存和协商缓存
+        </div>
+        <button onclick="fetchData('/combined')">测试组合策略</button>
+        <pre id="combined-result"></pre>
+    </div>
+
+    <script>
+        async function fetchData(url) {
+            const resultId = url.substring(1) + '-result';
+            try {
+                const response = await fetch(url);
+                let text = `Status: ${response.status}\n`;
+                text += `Headers:\n${formatHeaders(response.headers)}\n`;
+                
+                if (response.status !== 304) {
+                    const data = await response.json();
+                    text += `Data: ${JSON.stringify(data, null, 2)}`;
+                } else {
+                    text += 'Using cached data (304 Not Modified)';
+                }
+                
+                document.getElementById(resultId).textContent = text;
+            } catch (error) {
+                document.getElementById(resultId).textContent = 
+                    `Error: ${error.message}`;
+            }
+        }
+
+        async function updateContent() {
+            try {
+                const response = await fetch('/update-content', {
+                    method: 'POST'
+                });
+                const data = await response.json();
+                document.getElementById('update-result').textContent = 
+                    `${new Date().toLocaleTimeString()}: ${data.message}`;
+            } catch (error) {
+                document.getElementById('update-result').textContent = 
+                    `Error: ${error.message}`;
+            }
+        }
+
+        function formatHeaders(headers) {
+            let result = '';
+            for (const [key, value] of headers) {
+                result += `${key}: ${value}\n`;
+            }
+            return result;
+        }
+    </script>
+</body>
+</html>
