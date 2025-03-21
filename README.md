@@ -1,6 +1,6 @@
 # HTTP Cache Demo
 
-这是一个演示 HTTP 缓存机制的 Express 应用。
+这是一个演示 HTTP 缓存机制的 Express 应用
 
 ## 功能特性
 
